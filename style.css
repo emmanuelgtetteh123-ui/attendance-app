@@ -356,3 +356,11 @@ html, body {
 @keyframes locPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
 
 @keyframes fadeInDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+/* Location tip */
+.loc-tip { display:flex; align-items:flex-start; gap:8px; background:rgba(133,79,11,0.25); border:1px solid rgba(240,168,48,0.4); border-radius:var(--radius-sm); padding:10px 12px; font-size:12px; color:rgba(255,220,140,0.9); margin-top:10px; line-height:1.4; }
+.loc-tip svg { flex-shrink:0; margin-top:1px; }
+
+/* PWA safe area (iPhone notch/home bar) */
+.header { padding-top: env(safe-area-inset-top); }
+body { padding-bottom: env(safe-area-inset-bottom); }

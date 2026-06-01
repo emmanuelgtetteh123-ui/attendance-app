@@ -1,4 +1,4 @@
-const CACHE = 'drben-attendance-v2';
+const CACHE = 'drben-attendance-v1';
 const ASSETS = [
   '/',
   '/index.html',
