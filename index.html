@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr Ben's Attendance</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Animated background slideshow -->
+<div class="bg-slideshow" id="bgSlideshow">
+  <div class="bg-slide active" style="background-image:url('img1.jpg')"></div>
+  <div class="bg-slide" style="background-image:url('img2.jpg')"></div>
+  <div class="bg-slide" style="background-image:url('img3.jpg')"></div>
+  <div class="bg-slide" style="background-image:url('img4.jpg')"></div>
+  <div class="bg-slide" style="background-image:url('img5.jpg')"></div>
+  <div class="bg-slide" style="background-image:url('img6.jpg')"></div>
+  <div class="bg-slide" style="background-image:url('img7.jpg')"></div>
+</div>
+<!-- Dark overlay so text stays readable -->
+<div class="bg-overlay"></div>
+<!-- Floating logo watermarks over images -->
+<div class="watermarks">
+  <img src="logo.png" class="wm-logo" style="width:200px;top:4%;left:3%;animation-duration:22s">
+  <img src="logo.png" class="wm-logo" style="width:150px;top:40%;right:2%;animation-duration:28s;animation-delay:-9s">
+  <img src="logo.png" class="wm-logo" style="width:120px;bottom:6%;left:50%;animation-duration:19s;animation-delay:-5s">
+  <img src="logo.png" class="wm-logo" style="width:100px;top:65%;left:5%;animation-duration:24s;animation-delay:-14s">
+</div>
+<div class="particles" id="particles"></div>
+
+<!-- STUDENT SIGN-IN PAGE -->
+<div id="student-app" class="app-view" style="display:none">
+  <div class="header blue">
+    <div class="uenr-brand">
+      <img src="logo.png" alt="UENR logo">
+      <div class="uenr-brand-text">
+        <div class="uenr-brand-name">University for Energy and Natural Resources</div>
+        <div class="uenr-brand-sub">Knowledge · Integrity · Impact</div>
+      </div>
+    </div>
+    <div class="header-inner">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <span>Attendance Sign-In</span>
+    </div>
+  </div>
+  <div class="content">
+    <div id="s-loading" class="card center-card">
+      <div class="spinner"></div>
+      <p class="muted" style="margin-top:1rem">Checking for active session…</p>
+    </div>
+    <div id="s-no-session" class="card center-card" style="display:none">
+      <div class="icon-wrap gray">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <h2>No active session</h2>
+      <p class="muted">Your teacher hasn't opened a sign-in session yet. Please wait.</p>
+    </div>
+    <div id="s-locked" class="card center-card" style="display:none">
+      <div class="icon-wrap red">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      </div>
+      <h2>Sign-in is closed</h2>
+      <p class="muted">The 15-minute sign-in window has passed. Please see your teacher.</p>
+    </div>
+    <div id="s-success-screen" class="card center-card" style="display:none">
+      <div class="icon-wrap green">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h2 id="s-success-name">Attendance recorded!</h2>
+      <p class="muted" id="s-success-msg"></p>
+      <button class="btn btn-outline" onclick="resetStudentForm()" style="margin-top:1rem">Done</button>
+    </div>
+    <div id="s-already-signed" class="card center-card" style="display:none">
+      <div class="icon-wrap green">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h2>Already signed in</h2>
+      <p class="muted"><span id="s-already-name"></span>, your attendance has already been recorded from this device for this session.</p>
+    </div>
+
+    <div id="s-not-started" class="card center-card" style="display:none">
+      <div class="icon-wrap blue">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <h2>Not started yet</h2>
+      <p class="muted" style="margin-bottom:0.5rem">Sign-in for <strong id="s-not-started-class"></strong> opens at <strong id="s-start-time"></strong>.</p>
+      <p class="muted small">Please wait — this page will unlock automatically.</p>
+      <div class="pre-countdown" id="s-pre-countdown">--:--</div>
+    </div>
+
+    <div id="s-gps-prompt" class="card center-card" style="display:none">
+      <div class="icon-wrap blue">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><path d="M12 8a4 4 0 100 8 4 4 0 000-8z"/><path d="M12 1a11 11 0 110 22A11 11 0 0112 1z" stroke-dasharray="2 3"/></svg>
+      </div>
+      <h2>Location required</h2>
+      <p class="muted" style="margin-bottom:1.25rem">This app needs your GPS to confirm you are on campus. When asked, tap <strong>Allow</strong> or <strong>Allow while using the app</strong>.</p>
+      <div class="gps-steps">
+        <div class="gps-step"><span class="gps-num">1</span><span>Tap the button below</span></div>
+        <div class="gps-step"><span class="gps-num">2</span><span>Your phone will ask for location — tap <strong>Allow</strong></span></div>
+        <div class="gps-step"><span class="gps-num">3</span><span>You will be taken to the sign-in form</span></div>
+      </div>
+      <div id="pwa-loc-note" style="display:none;margin-top:1rem;background:rgba(133,79,11,0.25);border:1px solid rgba(240,168,48,0.4);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,220,140,0.9);line-height:1.5">
+        <strong>Installed as app?</strong> Go to your phone <strong>Settings → Apps → this app → Permissions → Location → Allow</strong> if the button below doesn't work.
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:1.25rem" onclick="requestGPS()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:4px"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        Allow location &amp; continue
+      </button>
+      <div id="s-gps-error" class="error-msg" style="display:none;margin-top:0.75rem;text-align:center"></div>
+    </div>
+
+    <div id="s-code-gate" style="display:none">
+      <div class="session-banner">
+        <div>
+          <div class="session-name" id="s-class-name-gate"></div>
+          <div class="session-date">Enter the code your lecturer wrote on the board</div>
+        </div>
+        <div class="countdown-wrap">
+          <div class="countdown-label">closes in</div>
+          <div class="countdown" id="s-countdown-gate">15:00</div>
+        </div>
+      </div>
+      <div class="card">
+        <label class="field-label">Session code</label>
+        <input id="s-code-input" class="field-input code-field" type="tel" placeholder="_ _ _ _" maxlength="4" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <div id="s-code-error" class="error-msg" style="display:none;margin-bottom:0.75rem"></div>
+        <button id="s-verify-btn" class="btn btn-primary" style="width:100%;margin-top:0.75rem" onclick="verifyCode()">
+          Verify &amp; continue
+        </button>
+      </div>
+    </div>
+
+    <div id="s-form" style="display:none">
+      <div class="session-banner">
+        <div>
+          <div class="session-name" id="s-class-name"></div>
+          <div class="session-date" id="s-date"></div>
+        </div>
+        <div class="countdown-wrap">
+          <div class="countdown-label">closes in</div>
+          <div class="countdown" id="s-countdown-form">15:00</div>
+        </div>
+      </div>
+      <div class="card">
+        <label class="field-label">Your name</label>
+        <select id="s-name" class="field-input">
+          <option value="">— select your name —</option>
+        </select>
+        <label class="field-label" style="margin-top:1rem">Status</label>
+        <div class="status-options">
+          <label class="status-opt selected-present" id="opt-present">
+            <input type="radio" name="status" value="present" checked onchange="selectStatus(this)">
+            <span>Present</span>
+          </label>
+          <label class="status-opt" id="opt-late">
+            <input type="radio" name="status" value="late" onchange="selectStatus(this)">
+            <span>Late</span>
+          </label>
+        </div>
+        <button class="btn btn-primary" style="margin-top:1.25rem;width:100%" onclick="submitAttendance()">
+          Submit attendance
+        </button>
+        <div id="s-submitting" style="display:none;text-align:center;margin-top:1rem">
+          <div class="spinner" style="margin:0 auto"></div>
+          <p class="muted small" style="margin-top:8px">Saving…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEACHER DASHBOARD -->
+<div id="teacher-app" class="app-view" style="display:none">
+  <div class="header blue">
+    <div class="uenr-brand">
+      <img src="logo.png" alt="UENR logo">
+      <div class="uenr-brand-text">
+        <div class="uenr-brand-name">University for Energy and Natural Resources</div>
+        <div class="uenr-brand-sub">Knowledge · Integrity · Impact</div>
+      </div>
+    </div>
+    <div class="header-inner">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Teacher Dashboard</span>
+      <button class="header-btn" onclick="teacherSignOut()" title="Sign out of teacher mode" style="margin-left:4px">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('sessions',this)">Sessions</button>
+    <button class="tab" onclick="switchTab('records',this)">Records</button>
+    <button class="tab" onclick="switchTab('absences',this)">Absences</button>
+    <button class="tab" onclick="switchTab('stats',this)">Stats</button>
+    <button class="tab" onclick="switchTab('students',this)">Students</button>
+  </div>
+  <div class="content">
+
+    <!-- SESSIONS -->
+    <div id="tab-sessions" class="tab-content active">
+      <div class="card">
+        <div class="card-title">Open a new session</div>
+        <label class="field-label">Class</label>
+        <select id="t-sess-class" class="field-input"></select>
+        <div class="two-col" style="margin-top:0.75rem">
+          <div>
+            <label class="field-label">Start time</label>
+            <input type="time" id="t-sess-time" class="field-input">
+          </div>
+          <div>
+            <label class="field-label">End time</label>
+            <input type="time" id="t-sess-end" class="field-input">
+          </div>
+        </div>
+        <div class="loc-tip">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Always open sessions on your <strong>phone</strong> for accurate GPS. Students must be within <strong>500m</strong> of you — blocks anyone at home.</span>
+        </div>
+        <button id="open-session-btn" class="btn btn-primary" style="margin-top:1rem;width:100%" onclick="openSession()">Open session</button>
+      </div>
+      <div id="t-active-sessions"></div>
+      <div class="section-label">Today's completed sessions</div>
+      <div id="t-past-sessions"><p class="muted small">No completed sessions yet.</p></div>
+    </div>
+
+    <!-- RECORDS -->
+    <div id="tab-records" class="tab-content">
+      <div class="filter-row">
+        <select id="t-rec-class" class="field-input small-select" onchange="renderRecords()"><option value="">All classes</option></select>
+        <input type="date" id="t-rec-date" class="field-input small-select" onchange="renderRecords()">
+        <button class="btn btn-outline small-btn" onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Student</th><th>Class</th><th>Status</th><th>Time</th></tr></thead>
+        <tbody id="t-rec-body"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ABSENCES -->
+    <div id="tab-absences" class="tab-content">
+      <div class="filter-row">
+        <select id="t-abs-class" class="field-input small-select" onchange="renderAbsences()"><option value="">All classes</option></select>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Student</th><th>Class</th><th>Absent</th><th>Late</th><th>Rate</th></tr></thead>
+        <tbody id="t-abs-body"></tbody></table>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div id="tab-stats" class="tab-content">
+      <div class="metrics-grid" id="t-stat-cards"></div>
+      <div class="card" style="margin-top:1rem">
+        <div class="card-title">Attendance by class</div>
+        <div id="t-class-bars"></div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <div class="card-title">This week</div>
+        <div id="t-week-bars"></div>
+      </div>
+    </div>
+
+    <!-- STUDENTS -->
+    <div id="tab-students" class="tab-content">
+      <div class="card">
+        <div class="card-title">Import from Excel / CSV</div>
+        <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="display:block;margin:0 auto 8px;opacity:0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p class="upload-title">Click to upload Excel or CSV</p>
+          <p class="upload-hint">Needs a <strong>Name</strong> column and a <strong>Class</strong> column</p>
+          <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(this)">
+        </div>
+        <div id="import-msg" style="display:none;margin-top:0.75rem;font-size:13px;padding:8px 12px;border-radius:8px"></div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <div class="card-title">Add single student</div>
+        <div class="two-col">
+          <div><label class="field-label">Full name</label><input id="t-add-name" class="field-input" placeholder="e.g. Ama Owusu"></div>
+          <div><label class="field-label">Class</label><input id="t-add-class" class="field-input" placeholder="e.g. Class 5B"></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:0.5rem" onclick="addStudent()">Add student</button>
+      </div>
+      <div class="filter-row" style="margin-top:1rem">
+        <select id="t-filter-class" class="field-input small-select" onchange="renderStudents()"><option value="">All classes</option></select>
+        <span id="t-student-count" class="muted small"></span>
+        <button class="btn btn-danger small-btn" onclick="clearStudents()">Clear all</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Name</th><th>Class</th><th></th></tr></thead>
+        <tbody id="t-student-body"></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HOME PAGE -->
+<div id="home-page" class="app-view">
+  <div class="home-hero">
+    <img src="logo.png" alt="UENR logo" class="home-logo">
+    <h1>Dr Ben's Attendance</h1>
+    <p class="muted" style="font-size:13px;margin-bottom:2px">University for Energy and Natural Resources</p>
+    <p class="muted">Who are you?</p>
+  </div>
+  <div class="home-options">
+    <button class="home-card" onclick="showPage('student')">
+      <div class="home-card-icon blue">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
+      <div>
+        <div class="home-card-title">I'm a student</div>
+        <div class="home-card-sub">Sign in to today's class</div>
+      </div>
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button class="home-card" onclick="teacherLogin()">
+      <div class="home-card-icon purple">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      </div>
+      <div>
+        <div class="home-card-title">I'm a teacher</div>
+        <div class="home-card-sub">Manage sessions &amp; records</div>
+      </div>
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+  <!-- PIN modal -->
+  <div id="pin-modal" style="display:none" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-title">Teacher access</div>
+      <p class="muted small" style="margin-bottom:1rem">Enter your PIN to continue</p>
+      <input type="password" id="pin-input" class="field-input" placeholder="Enter PIN" maxlength="6" oninput="if(this.value.length>=4)checkPin()">
+      <div id="pin-error" class="error-msg" style="display:none">Incorrect PIN. Try again.</div>
+      <div style="display:flex;gap:8px;margin-top:1rem">
+        <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('pin-modal').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" style="flex:1" onclick="checkPin()">Enter</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module" src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
